@@ -1,9 +1,9 @@
 import React from 'react';
 import { useAuth } from '../App';
-import { 
-  TrendingUp, 
-  Target, 
-  Award, 
+import {
+  TrendingUp,
+  Target,
+  Award,
   Calendar,
   ArrowRight,
   BookOpen,
@@ -189,7 +189,7 @@ export function Dashboard({ onTabChange }: DashboardProps) {
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div className="bg-gradient-to-r from-[#6A0DAD] to-[#9B4DFF] h-2 rounded-full" style={{ width: '85%' }} />
                 </div>
-                
+
                 <div className="flex items-center justify-between mt-4">
                   <span className="text-gray-600">Skill Assessment</span>
                   <span className="font-medium">92%</span>

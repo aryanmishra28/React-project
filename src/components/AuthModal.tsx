@@ -45,7 +45,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
@@ -69,8 +69,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
               {isLogin ? 'Welcome Back!' : 'Join NEXT STEP'}
             </h2>
             <p className="text-white/80">
-              {isLogin 
-                ? 'Sign in to continue your career journey' 
+              {isLogin
+                ? 'Sign in to continue your career journey'
                 : 'Start your career growth journey today'
               }
             </p>
