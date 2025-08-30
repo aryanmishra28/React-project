@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { useAuth } from '../App';
 import { X, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 
@@ -16,7 +16,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -57,6 +57,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-full transition-colors"
+            title="Close"
           >
             <X size={20} />
           </button>

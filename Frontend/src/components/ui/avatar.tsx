@@ -1,14 +1,14 @@
 "use client";
 
 import * as React from "react";
-import * as AvatarPrimitive from "@radix-ui/react-avatar@1.1.3";
+import type { ComponentPropsWithoutRef, ComponentProps } from "react";
+import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 import { cn } from "./utils";
-
 function Avatar({
   className,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root>) {
+}: ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>) {
   return (
     <AvatarPrimitive.Root
       data-slot="avatar"
@@ -20,11 +20,10 @@ function Avatar({
     />
   );
 }
-
 function AvatarImage({
   className,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+}: ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>) {
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
@@ -33,11 +32,10 @@ function AvatarImage({
     />
   );
 }
-
 function AvatarFallback({
   className,
   ...props
-}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
+}: ComponentProps<typeof AvatarPrimitive.Fallback>) {
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"

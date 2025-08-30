@@ -1,20 +1,38 @@
-// This API service has been simplified and moved to AuthContext.tsx
-// Keeping this file as a placeholder to prevent import errors
-export class ApiService {
-  static async getCurrentUser() {
-    return null;
-  }
-  
-  static async signup(email: string, password: string, name: string) {
-    console.log('Mock signup:', email, name);
-  }
-  
-  static async signIn(email: string, password: string) {
-    console.log('Mock signin:', email);
-    return { user: { email, user_metadata: { name: 'Test User' } } };
-  }
-  
-  static async signOut() {
-    console.log('Mock signout');
-  }
+const API_BASE_URL = 'http://localhost:5000/api';
+
+interface AuthResponse {
+  token: string;
+  message: string;
 }
+
+export const registerUser = async (email, password): Promise<AuthResponse> => {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Registration failed');
+  }
+  return data;
+};
+
+export const loginUser = async (email, password): Promise<AuthResponse> => {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'Login failed');
+  }
+  return data;
+};
