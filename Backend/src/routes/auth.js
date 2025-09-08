@@ -2,7 +2,9 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken'); // Import jsonwebtoken
 const User = require('../models/user');
+require('dotenv').config(); // Load environment variables
 
 // POST /api/auth/register
 // Registers a new user
@@ -32,13 +34,6 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// auth.js
-const jwt = require('jsonwebtoken');
-require('dotenv').config(); // Make sure this is at the top of your file
-
-// In the login route:
-const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
 // POST /api/auth/login
 // Authenticates a user and returns a JWT
 router.post('/login', async (req, res) => {
@@ -57,8 +52,8 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Create a JWT
-    const token = jwt.sign({ userId: user._id }, 'your_jwt_secret', { expiresIn: '1h' });
+    // Create a JWT using the secret from your .env file
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token, message: 'Logged in successfully' });
   } catch (error) {
