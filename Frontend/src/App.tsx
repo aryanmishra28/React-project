@@ -6,6 +6,7 @@ import { ResumeAnalyzer } from './components/ResumeAnalyzer';
 import { JobsAndUpdates } from './components/JobsAndUpdates';
 import { MentorConnect } from './components/MentorConnect';
 import { AuthModal } from './components/AuthModal';
+import {loginUser, registerUser} from './utils/api';
 
 // Simplified Auth Context
 const AuthContext = createContext({
@@ -17,16 +18,19 @@ const AuthContext = createContext({
 
 export const useAuth = () => useContext(AuthContext);
 
-function AuthProvider({ children }: { children: React.ReactNode }) {
+function AuthProvider({ children }: { children?: any }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setUser({ email, name: email.split('@')[0] });
-    setLoading(false);
+    try {
+      const { token } = await loginUser(email, password);
+      localStorage.setItem('token', token);
+      setUser({ email, name: email.split('@')[0] });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = () => {

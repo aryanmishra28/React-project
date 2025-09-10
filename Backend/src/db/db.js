@@ -8,3 +8,4 @@ function connectDB(){
         console.log(err);
     });
 }
+module.exports = connectDB;

@@ -18,22 +18,21 @@ export function ResumeAnalyzer() {
     }
   };
 
-  const analyzeResume = () => {
-    if (!selectedFile || !user) return;
-    
-    // Mock analysis
-    setAnalysisData({
-      score: 78,
-      strengths: [
-        { title: "Technical Skills", description: "Strong programming background" },
-        { title: "Education", description: "Relevant degree highlighted" }
-      ],
-      weaknesses: [
-        { title: "Keywords", description: "Add more industry keywords" },
-        { title: "Experience", description: "Include more details" }
-      ]
-    });
-  };
+  // replace analyzeResume in Frontend/src/components/ResumeAnalyzer.tsx
+const analyzeResume = async () => {
+  if (!selectedFile || !user) return;
+
+  const text = await selectedFile.text(); // basic approach
+  const res = await fetch('http://localhost:5000/api/resume/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resumeText: text }),
+  });
+  const data = await res.json();
+  if (data.success) {
+    setAnalysisData(parseFromText(data.feedback)); // or show feedback text directly
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8">

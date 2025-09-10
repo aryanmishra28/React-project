@@ -82,31 +82,23 @@ export function HackathonIdeas() {
     }
   ];
 
-  const generateIdeas = async () => {
-    setIsGenerating(true);
-    // Simulate AI generation
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const newIdeas = [
-      {
-        title: `Smart ${selectedSkill} Solution`,
-        description: `An innovative ${selectedSkill.toLowerCase()} project that addresses real-world challenges`,
-        difficulty: 'Intermediate',
-        tech: ['React', 'Node.js', 'MongoDB'],
-        category: 'Innovation'
-      },
-      {
-        title: `${selectedSkill} for Social Good`,
-        description: `Using ${selectedSkill.toLowerCase()} to create positive social impact`,
-        difficulty: 'Advanced',
-        tech: ['Python', 'Machine Learning', 'Cloud Services'],
-        category: 'Social Impact'
-      }
-    ];
-    
-    setGeneratedIdeas(newIdeas);
+  // replace generateIdeas in Frontend/src/components/HackathonIdeas.tsx
+const generateIdeas = async () => {
+  if (!selectedSkill) return;
+  setIsGenerating(true);
+  try {
+    const res = await fetch('http://localhost:5000/api/hackathon/generate-ideas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ interest: selectedSkill, category: 'Innovation', skillLevel: 'Intermediate' }),
+    });
+    const data = await res.json();
+    // data.ideas is a text block from the model — render as text or parse into cards
+    setGeneratedIdeas([{ title: 'Ideas', description: data.ideas, difficulty: 'Intermediate', tech: [], category: 'AI' }]);
+  } finally {
     setIsGenerating(false);
-  };
+  }
+};
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {

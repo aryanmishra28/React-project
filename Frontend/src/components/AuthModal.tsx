@@ -1,6 +1,7 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../App';
 import { X, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { registerUser } from '../utils/api';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,11 +17,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      if (!isLogin) {
+        await registerUser(email, password);
+      }
       await login(email, password);
       onClose();
       // Reset form

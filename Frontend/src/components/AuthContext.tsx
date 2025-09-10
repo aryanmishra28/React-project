@@ -9,7 +9,7 @@ const AuthContext = createContext({
 
 export const useAuth = () => useContext(AuthContext);  // ✅ Exported here
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children?: React.ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
