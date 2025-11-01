@@ -1,4 +1,4 @@
-import React, { useState, createContext, useContext } from 'react';
+import React, { useState, createContext, useContext, useEffect } from 'react';
 import { Navigation } from './components/Navigation';
 import { Dashboard } from './components/Dashboard';
 import { HackathonIdeas } from './components/HackathonIdeas';
@@ -19,15 +19,41 @@ const AuthContext = createContext({
 export const useAuth = () => useContext(AuthContext);
 
 function AuthProvider({ children }: { children?: any }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+
+  // Check for stored user on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
+    
+    if (storedUser && storedToken) {
+      try {
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+        localStorage.removeItem('user'); // Clean up after use
+      } catch (e) {
+        console.error('Error parsing stored user:', e);
+      }
+    }
+  }, []);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const { token } = await loginUser(email, password);
-      localStorage.setItem('token', token);
-      setUser({ email, name: email.split('@')[0] });
+      const response = await loginUser(email, password);
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+      }
+      setUser({ 
+        email: response.user?.email || email, 
+        name: response.user?.name || email.split('@')[0],
+        id: response.user?.id
+      });
+      return response;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -35,6 +61,8 @@ function AuthProvider({ children }: { children?: any }) {
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
 
   return (

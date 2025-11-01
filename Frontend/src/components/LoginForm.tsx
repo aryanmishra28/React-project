@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { loginUser, registerUser } from '../utils/api'; // Import the new functions
 
 const LoginForm = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
@@ -13,8 +14,8 @@ const LoginForm = () => {
 
     try {
       if (isRegistering) {
-        // Calls the register endpoint
-        const data = await registerUser(email, password);
+        // Calls the register endpoint (now requires name)
+        const data = await registerUser(name, email, password);
         console.log('Registration successful:', data.message);
       } else {
         // Calls the login endpoint
@@ -30,7 +31,16 @@ const LoginForm = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      {/* ... your form fields for email and password ... */}
+      {!isRegistering && null}
+      {isRegistering && (
+        <input 
+          type="text" 
+          value={name} 
+          onChange={(e) => setName(e.target.value)} 
+          placeholder="Full Name" 
+          required 
+        />
+      )}
       <input 
         type="email" 
         value={email} 

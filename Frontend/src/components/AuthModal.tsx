@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../App';
 import { X, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
-import { registerUser } from '../utils/api';
+import { registerUser, googleSignIn } from '../utils/api';
+
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -15,26 +21,38 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
+  const googleButtonRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     try {
       if (!isLogin) {
-        await registerUser(email, password);
+        // Register first
+        if (!name.trim()) {
+          setError('Full name is required');
+          setIsLoading(false);
+          return;
+        }
+        await registerUser(name, email, password);
       }
+      // Then login
       await login(email, password);
       onClose();
       // Reset form
       setEmail('');
       setPassword('');
       setName('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Auth error:', error);
+      setError(error?.message || 'An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const toggleMode = () => {
@@ -42,7 +60,90 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setEmail('');
     setPassword('');
     setName('');
+    setError(null);
   };
+
+  // Handle Google Sign-in callback
+  const handleGoogleSignIn = useCallback(async (response: any) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const authResponse = await googleSignIn(response.credential);
+      if (authResponse.token) {
+        localStorage.setItem('token', authResponse.token);
+      }
+      
+      // Update user context - we need to trigger a re-render
+      // For now, we'll reload the page to refresh auth state
+      // In a production app, you'd update the context directly
+      if (authResponse.user) {
+        // Store user in localStorage temporarily
+        localStorage.setItem('user', JSON.stringify(authResponse.user));
+        onClose();
+        // Reload to refresh auth state
+        setTimeout(() => window.location.reload(), 500);
+      }
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      setError(error?.message || 'Google sign-in failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [onClose]);
+
+  // Initialize Google Sign-in button
+  useEffect(() => {
+    if (!isOpen || !googleButtonRef.current) return;
+
+    // Clear any existing button
+    if (googleButtonRef.current) {
+      googleButtonRef.current.innerHTML = '';
+    }
+
+    // Wait for Google script to load
+    let retryCount = 0;
+    const maxRetries = 50; // 5 seconds max
+
+    const initGoogleSignIn = () => {
+      if (window.google && window.google.accounts && googleButtonRef.current) {
+        try {
+          // Get Google Client ID from environment or use placeholder
+          const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
+          
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleGoogleSignIn,
+          });
+
+          window.google.accounts.id.renderButton(
+            googleButtonRef.current,
+            {
+              type: 'standard',
+              theme: 'outline',
+              size: 'large',
+              text: 'signin_with',
+              width: '100%',
+            }
+          );
+        } catch (error) {
+          console.error('Error initializing Google Sign-in:', error);
+        }
+      } else if (retryCount < maxRetries) {
+        retryCount++;
+        setTimeout(initGoogleSignIn, 100);
+      }
+    };
+
+    initGoogleSignIn();
+
+    // Cleanup function
+    return () => {
+      if (googleButtonRef.current) {
+        googleButtonRef.current.innerHTML = '';
+      }
+    };
+  }, [isOpen, handleGoogleSignIn]);
 
   if (!isOpen) return null;
 
@@ -84,6 +185,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
         {/* Form */}
         <div className="p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <div className="space-y-2">
@@ -179,18 +285,21 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             <div className="mt-4 space-y-3">
-              <button className="w-full flex items-center justify-center space-x-3 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
-                <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">G</span>
-                </div>
-                <span className="font-medium text-gray-700">Continue with Google</span>
-              </button>
+              {/* Google Sign-in Button */}
+              <div ref={googleButtonRef} className="w-full flex justify-center min-h-[40px]">
+                {/* Placeholder text will be replaced by Google button */}
+              </div>
 
-              <button className="w-full flex items-center justify-center space-x-3 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
-                <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+              {/* Facebook Sign-in (placeholder) */}
+              <button
+                type="button"
+                disabled
+                className="w-full flex items-center justify-center space-x-3 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-400 cursor-not-allowed"
+              >
+                <div className="w-5 h-5 bg-gray-400 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">f</span>
                 </div>
-                <span className="font-medium text-gray-700">Continue with Facebook</span>
+                <span className="font-medium">Continue with Facebook (Coming Soon)</span>
               </button>
             </div>
           </div>
