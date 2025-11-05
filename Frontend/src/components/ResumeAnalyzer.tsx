@@ -3,45 +3,89 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "../App";
 import { Upload, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure PDF.js worker - use local copy to avoid CORS issues
+if (typeof window !== 'undefined') {
+  // Use local worker file from public folder (served by Vite)
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+}
 
 export function ResumeAnalyzer() {
   const { user } = useAuth();
-  const [selectedFile, setSelectedFile] = React.useState(null);
-  const [analysisData, setAnalysisData] = React.useState(null);
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const [analysisData, setAnalysisData] = React.useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+      setError(null); // Clear previous errors when new file is selected
     }
   };
 
-  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
-  const [error, setError] = React.useState(null);
-
-  // Extract text from file (basic implementation)
-  const extractTextFromFile = async (file) => {
-    // For text files, use .text()
-    if (file.type === 'text/plain') {
-      return await file.text();
+  // Extract text from file (supports PDF and text files)
+  const extractTextFromFile = async (file: File): Promise<string> => {
+    // Handle PDF files
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        
+        let fullText = '';
+        const numPages = pdf.numPages;
+        
+        // Extract text from all pages
+        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          
+          // Combine all text items
+          const pageText = textContent.items
+            .map((item: any) => item.str)
+            .join(' ');
+          
+          fullText += pageText + '\n\n';
+        }
+        
+        if (!fullText.trim()) {
+          throw new Error('The PDF file appears to be empty or contains only images. Please try a text-based PDF.');
+        }
+        
+        return fullText.trim();
+      } catch (error: any) {
+        console.error('PDF parsing error:', error);
+        throw new Error(`Failed to parse PDF: ${error.message || 'Please ensure the PDF is not password-protected and contains extractable text.'}`);
+      }
     }
     
-    // For PDF, DOC, DOCX - we'd need a library like pdf-parse or mammoth
-    // For now, show an error message for unsupported formats
-    if (file.type === 'application/pdf' || 
-        file.name.endsWith('.pdf') ||
-        file.name.endsWith('.doc') ||
-        file.name.endsWith('.docx')) {
-      throw new Error('PDF and DOC files require additional parsing. Please copy and paste your resume text, or convert to .txt file.');
+    // Handle text files
+    if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
+      try {
+        return await file.text();
+      } catch (error: any) {
+        throw new Error('Failed to read text file. Please try again.');
+      }
     }
     
-    // Try to read as text (might work for some formats)
+    // For DOC/DOCX files, suggest conversion
+    if (file.name.toLowerCase().endsWith('.doc') || file.name.toLowerCase().endsWith('.docx')) {
+      throw new Error('DOC and DOCX files are not currently supported. Please convert your resume to PDF or text format.');
+    }
+    
+    // Try to read as text for other formats
     try {
-      return await file.text();
-    } catch (err) {
-      throw new Error('Unable to read file. Please ensure it\'s a text file or copy the resume content.');
+      const text = await file.text();
+      if (!text.trim()) {
+        throw new Error('The file appears to be empty or in an unsupported format.');
+      }
+      return text;
+    } catch (err: any) {
+      throw new Error('Unable to read file. Supported formats: PDF (.pdf) and Text (.txt)');
     }
   };
 
@@ -125,7 +169,7 @@ export function ResumeAnalyzer() {
                 <div className="border-2 border-dashed border-purple-300 rounded-xl p-8 text-center">
                   <input
                     type="file"
-                    accept=".txt,.text"
+                    accept=".pdf,.txt,.text"
                     onChange={handleFileSelect}
                     className="hidden"
                     id="resume-upload"
@@ -135,8 +179,8 @@ export function ResumeAnalyzer() {
                     <p className="text-lg font-medium text-gray-700">
                       {selectedFile ? selectedFile.name : 'Drop your resume here'}
                     </p>
-                    <p className="text-sm text-gray-500">Text files (.txt) supported</p>
-                    <p className="text-xs text-gray-400 mt-1">For PDF/DOC files, copy content to a .txt file</p>
+                    <p className="text-sm text-gray-500">PDF and Text files supported</p>
+                    <p className="text-xs text-gray-400 mt-1">Upload your resume in PDF or TXT format</p>
                   </label>
                 </div>
                 
@@ -165,7 +209,7 @@ export function ResumeAnalyzer() {
                   <h3 className="text-xl font-semibold text-gray-900">Upload Your Resume</h3>
                   <p className="text-gray-600">Get AI-powered insights and recommendations</p>
                   <p className="text-sm text-gray-500 mt-2">
-                    Note: For best results, upload a .txt file or copy your resume content into a text file.
+                    Supported formats: PDF (.pdf) and Text (.txt)
                   </p>
                 </CardContent>
               </Card>

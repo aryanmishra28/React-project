@@ -5,7 +5,7 @@ import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Input } from "./ui/input";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "../App";
 import { MessageCircle, Star, Users, Calendar, Send, Search, Filter } from "lucide-react";
 
 export function MentorConnect() {

@@ -38,18 +38,37 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           setIsLoading(false);
           return;
         }
-        await registerUser(name, email, password);
+        const registerResponse = await registerUser(name, email, password);
+        console.log('Registration successful:', registerResponse);
       }
       // Then login
-      await login(email, password);
+      const loginResponse = await login(email, password);
+      console.log('Login successful:', loginResponse);
+      
+      // Small delay to ensure state is updated
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       onClose();
       // Reset form
       setEmail('');
       setPassword('');
       setName('');
+      setError(null);
     } catch (error: any) {
       console.error('Auth error:', error);
-      setError(error?.message || 'An error occurred. Please try again.');
+      // Provide more helpful error messages
+      let errorMessage = 'An error occurred. Please try again.';
+      if (error?.message) {
+        errorMessage = error.message;
+        // Check if it's a network/server error
+        if (error.message.includes('Network error') || error.message.includes('Could not connect')) {
+          errorMessage = 'Cannot connect to server. Please make sure the backend server is running on port 5000.';
+        } else if (error.message.includes('500')) {
+          errorMessage = 'Server error. Please check the backend logs for details.';
+        }
+      }
+      setError(errorMessage);
+      // Don't close modal on error
     } finally {
       setIsLoading(false);
     }
@@ -78,11 +97,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       // For now, we'll reload the page to refresh auth state
       // In a production app, you'd update the context directly
       if (authResponse.user) {
-        // Store user in localStorage temporarily
-        localStorage.setItem('user', JSON.stringify(authResponse.user));
+        // Store user in sessionStorage for persistence
+        sessionStorage.setItem('user', JSON.stringify(authResponse.user));
+        // Update auth context immediately without reload
+        const { login } = useAuth();
+        // Force update by setting user state directly (we'll reload as fallback)
         onClose();
-        // Reload to refresh auth state
-        setTimeout(() => window.location.reload(), 500);
+        // Small delay then reload to ensure state is updated
+        setTimeout(() => window.location.reload(), 300);
       }
     } catch (error: any) {
       console.error('Google sign-in error:', error);
@@ -109,7 +131,18 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       if (window.google && window.google.accounts && googleButtonRef.current) {
         try {
           // Get Google Client ID from environment or use placeholder
-          const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
+          const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID || 
+                          import.meta.env.VITE_GOOGLE_CLIENT_ID || 
+                          '';
+          
+          // Only initialize if we have a valid client ID
+          if (!clientId || clientId === 'YOUR_GOOGLE_CLIENT_ID' || clientId.trim() === '') {
+            console.warn('Google Client ID not configured. Google Sign-in is disabled.');
+            if (googleButtonRef.current) {
+              googleButtonRef.current.innerHTML = '<button type="button" disabled class="w-full flex items-center justify-center space-x-3 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-400 cursor-not-allowed"><span className="font-medium">Google Sign-in (Not Configured)</span></button>';
+            }
+            return;
+          }
           
           window.google.accounts.id.initialize({
             client_id: clientId,
@@ -128,6 +161,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           );
         } catch (error) {
           console.error('Error initializing Google Sign-in:', error);
+          if (googleButtonRef.current) {
+            googleButtonRef.current.innerHTML = '<button type="button" disabled class="w-full flex items-center justify-center space-x-3 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-400 cursor-not-allowed"><span className="font-medium">Google Sign-in (Error)</span></button>';
+          }
         }
       } else if (retryCount < maxRetries) {
         retryCount++;

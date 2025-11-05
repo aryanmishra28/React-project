@@ -255,7 +255,7 @@ const generateIdeas = async () => {
           </div>
 
           {isLoadingHackathons ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-pulse">
                   <div className="h-32 bg-gray-200"></div>
@@ -309,39 +309,39 @@ const generateIdeas = async () => {
               {featuredHackathons.map((hackathon) => (
                 <div key={hackathon.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200">
                   <div className={`h-32 ${hackathon.image || 'bg-gradient-to-br from-[#6A0DAD] to-[#9B4DFF]'} flex items-center justify-center`}>
-                    <div className="text-center text-white">
-                      <Trophy size={32} className="mx-auto mb-2" />
+                  <div className="text-center text-white">
+                    <Trophy size={32} className="mx-auto mb-2" />
                       <p className="font-bold text-lg">{hackathon.prize || 'TBA'}</p>
-                    </div>
                   </div>
+                </div>
 
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="font-semibold text-gray-900 leading-tight">{hackathon.title}</h3>
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="font-semibold text-gray-900 leading-tight">{hackathon.title}</h3>
                       {hackathon.difficulty && (
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(hackathon.difficulty)}`}>
-                          {hackathon.difficulty}
-                        </span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(hackathon.difficulty)}`}>
+                      {hackathon.difficulty}
+                    </span>
                       )}
-                    </div>
+                  </div>
 
                     {hackathon.description && (
                       <p className="text-sm text-gray-600 mb-3 line-clamp-2">{hackathon.description}</p>
                     )}
 
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center text-gray-600 text-sm">
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-gray-600 text-sm">
                         <Calendar size={14} className="mr-2 flex-shrink-0" />
                         <span>{hackathon.date}</span>
-                      </div>
-                      <div className="flex items-center text-gray-600 text-sm">
+                    </div>
+                    <div className="flex items-center text-gray-600 text-sm">
                         <MapPin size={14} className="mr-2 flex-shrink-0" />
                         <span>{hackathon.location}</span>
                         {hackathon.isVirtual && (
                           <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">Virtual</span>
                         )}
-                      </div>
-                      <div className="flex items-center text-gray-600 text-sm">
+                    </div>
+                    <div className="flex items-center text-gray-600 text-sm">
                         <Users size={14} className="mr-2 flex-shrink-0" />
                         <span>{hackathon.participants} participants</span>
                       </div>
@@ -349,18 +349,18 @@ const generateIdeas = async () => {
                         <div className="flex items-center text-gray-600 text-sm">
                           <Clock size={14} className="mr-2 flex-shrink-0" />
                           <span>Deadline: {hackathon.deadline}</span>
-                        </div>
-                      )}
                     </div>
+                      )}
+                  </div>
 
                     {hackathon.tags && hackathon.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="flex flex-wrap gap-2 mb-4">
                         {hackathon.tags.slice(0, 3).map((tag, tagIndex) => (
-                          <span key={tagIndex} className="px-2 py-1 bg-[#6A0DAD]/10 text-[#6A0DAD] rounded-lg text-xs">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+                      <span key={tagIndex} className="px-2 py-1 bg-[#6A0DAD]/10 text-[#6A0DAD] rounded-lg text-xs">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                     )}
 
                     <a
@@ -369,13 +369,13 @@ const generateIdeas = async () => {
                       rel="noopener noreferrer"
                       className="w-full bg-gradient-to-r from-[#6A0DAD] to-[#9B4DFF] text-white py-3 rounded-xl font-medium hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
                     >
-                      <span>Register Now</span>
-                      <ExternalLink size={16} />
+                    <span>Register Now</span>
+                    <ExternalLink size={16} />
                     </a>
-                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
           )}
         </section>
 
