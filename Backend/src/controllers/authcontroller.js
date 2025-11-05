@@ -7,12 +7,12 @@ require('dotenv').config();
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    
+
     // Validate input
     if (!name || !email || !password) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: 'All fields are required' 
+        message: 'All fields are required'
       });
     }
 
@@ -38,6 +38,13 @@ const register = async (req, res) => {
     });
 
     // Generate JWT token
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is not defined in .env file!');
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error. Please contact administrator.'
+      });
+    }
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     // Set cookie
@@ -91,6 +98,14 @@ const login = async (req, res) => {
       });
     }
 
+    // Check if user has a password (OAuth users might not have one)
+    if (!user.password) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'This account was created with Google. Please sign in with Google instead.' 
+      });
+    }
+
     // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -101,6 +116,13 @@ const login = async (req, res) => {
     }
 
     // Generate JWT token
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is not defined in .env file!');
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error. Please contact administrator.'
+      });
+    }
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     // Set cookie
@@ -110,7 +132,7 @@ const login = async (req, res) => {
       sameSite: 'lax'
     });
 
-    res.json({ 
+    res.json({
       success: true,
       message: 'Logged in successfully',
       token,
@@ -134,15 +156,15 @@ const login = async (req, res) => {
 const logout = async (req, res) => {
   try {
     res.clearCookie("token");
-    res.json({ 
+    res.json({
       success: true,
-      message: 'Logged out successfully' 
+      message: 'Logged out successfully'
     });
   } catch (error) {
     console.error('Logout error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: 'Something went wrong' 
+      message: 'Something went wrong'
     });
   }
 };
@@ -153,9 +175,9 @@ const googleLogin = async (req, res) => {
     const { idToken } = req.body;
 
     if (!idToken) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: 'ID token is required' 
+        message: 'ID token is required'
       });
     }
 
@@ -206,6 +228,13 @@ const googleLogin = async (req, res) => {
     }
 
     // Generate JWT token
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is not defined in .env file!');
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error. Please contact administrator.'
+      });
+    }
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     // Set cookie
@@ -215,7 +244,7 @@ const googleLogin = async (req, res) => {
       sameSite: 'lax'
     });
 
-    res.json({ 
+    res.json({
       success: true,
       message: 'Logged in successfully with Google',
       token,
