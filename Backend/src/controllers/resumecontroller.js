@@ -1,9 +1,8 @@
-const fetch = require('node-fetch');
+const fetch = (...args) =>
+  import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
-// Analyze resume using OpenAI ✅ CORRECT APPROACH
 const analyzeResume = async (req, res) => {
   try {
-    // 1. Receive resume data from the frontend.
     const { resumeText } = req.body;
 
     if (!resumeText || resumeText.trim().length === 0) {
@@ -13,87 +12,73 @@ const analyzeResume = async (req, res) => {
       });
     }
 
-    // 2. Create a detailed prompt asking for structured JSON response
     const prompt = `Analyze the following resume and provide detailed feedback.
-Return your response as a JSON object with this exact structure:
+Return your response as a JSON object with this structure:
 {
   "score": <number from 1-100>,
-  "strengths": [
-    {"title": "<strength title>", "description": "<detailed description>"}
-  ],
-  "weaknesses": [
-    {"title": "<weakness title>", "description": "<detailed description>"}
-  ],
-  "suggestions": "<overall improvement suggestions>"
+  "strengths": [{"title": "...", "description": "..."}],
+  "weaknesses": [{"title": "...", "description": "..."}],
+  "suggestions": "<string>"
 }
 
-Analyze the following resume:
-${resumeText.substring(0, 4000)}`; // Limit to avoid token limits
+Resume:
+${resumeText.substring(0, 4000)}`;
 
-    // 3. Call OpenAI API with response_format to ensure JSON output
-    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [{
-          role: 'user',
-          content: prompt
-        }],
-        response_format: { type: 'json_object' } // Ensures JSON output
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" }
       })
     });
 
     if (!aiResponse.ok) {
-      const errorData = await aiResponse.json();
-      console.error('OpenAI API Error:', errorData);
-      return res.status(aiResponse.status).json({ 
-        success: false, 
-        message: 'Failed to get AI analysis. Please check your API key.' 
+      const errData = await aiResponse.json();
+      console.error("OpenAI API Error:", errData);
+      return res.status(aiResponse.status).json({
+        success: false,
+        message: "Failed to get AI analysis. Check API key."
       });
     }
 
     const data = await aiResponse.json();
 
-    // 4. Extract and parse the AI-generated feedback (should be JSON)
-    const feedbackContent = data.choices[0].message.content;
-    
-    let analysisResult;
+    const content = data.choices[0].message.content;
+
+    let json;
     try {
-      analysisResult = JSON.parse(feedbackContent);
-    } catch (parseError) {
-      // Fallback: If JSON parsing fails, return raw feedback
-      console.warn('Failed to parse JSON, returning raw feedback');
-      return res.json({ 
-        success: true, 
-        feedback: feedbackContent,
-        raw: true // Flag to indicate unstructured response
+      json = JSON.parse(content);
+    } catch (err) {
+      console.warn("AI response is not JSON. Returning raw text.");
+      return res.json({
+        success: true,
+        feedback: content,
+        raw: true
       });
     }
 
-    // 5. Validate and structure the response
-    const structuredFeedback = {
-      score: analysisResult.score || 50,
-      strengths: analysisResult.strengths || [],
-      weaknesses: analysisResult.weaknesses || [],
-      suggestions: analysisResult.suggestions || 'No specific suggestions provided.'
-    };
-
-    // 6. Send structured feedback back to the frontend
-    res.json({ success: true, feedback: structuredFeedback });
+    res.json({
+      success: true,
+      feedback: {
+        score: json.score || 50,
+        strengths: json.strengths || [],
+        weaknesses: json.weaknesses || [],
+        suggestions: json.suggestions || ""
+      }
+    });
 
   } catch (error) {
-    console.error('Error analyzing resume:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to analyze resume. Please try again later.' 
+    console.error("Error analyzing resume:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to analyze resume."
     });
   }
 };
 
-module.exports = {
-  analyzeResume
-};
+module.exports = { analyzeResume };

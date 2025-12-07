@@ -5,13 +5,14 @@ import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 import { useAuth } from "../App";
 import { Upload, FileText, CheckCircle, AlertCircle } from "lucide-react";
-import * as pdfjsLib from 'pdfjs-dist';
+import { GlobalWorkerOptions, getDocument } from "pdfjs-dist/legacy/build/pdf";
+import workerSrc from "pdfjs-dist/build/pdf.worker?url";
 
-// Configure PDF.js worker - use local copy to avoid CORS issues
-if (typeof window !== 'undefined') {
-  // Use local worker file from public folder (served by Vite)
-  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+// Configure PDF.js worker (Vite-compatible)
+if (typeof window !== "undefined") {
+  GlobalWorkerOptions.workerSrc = workerSrc;
 }
+
 
 export function ResumeAnalyzer() {
   const { user } = useAuth();
