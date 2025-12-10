@@ -88,7 +88,7 @@ const generateIdeas = async () => {
   if (!selectedSkill) return;
   setIsGenerating(true);
   try {
-    const res = await fetch('http://localhost:5000/api/hackathon/generate-ideas', {
+    const res = await fetch('https://nextstep-react-project.onrender.com/api/hackathon/generate-ideas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ interest: selectedSkill, category: 'Innovation', skillLevel: 'Intermediate' }),

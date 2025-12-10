@@ -105,7 +105,7 @@ export function ResumeAnalyzer() {
       }
 
       // Call the API
-      const res = await fetch('http://localhost:5000/api/resume/analyze', {
+      const res = await fetch('https://nextstep-react-project.onrender.com/api/resume/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText }),
